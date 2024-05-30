@@ -7,6 +7,7 @@ from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth import authenticate
 from .models import HydroponicSystem, Measurement
 from .serializers import UserSerializer, HydroponicSystemSerializer, MeasurementSerializer
+from rest_framework.pagination import PageNumberPagination
 
 class RegisterView(APIView):
     
@@ -82,13 +83,19 @@ class HydroView(APIView):
 
         except HydroponicSystem.DoesNotExist:
             return Response({"error": "Hydroponic system not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+
+class MeasurementPagination(PageNumberPagination):
+    page_size = 5
+
 class MeasurementView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     
     def post(self, request, id):
-        hydroponic_system = HydroponicSystem.objects.get(id=id)
+        try:
+            hydroponic_system = HydroponicSystem.objects.get(id=id)
+        except HydroponicSystem.DoesNotExist:
+            return Response({"error": "Hydroponic system not found."}, status=status.HTTP_404_NOT_FOUND)
         
         if hydroponic_system.owner != request.user:
                 return Response({"error": "You are not an owner."}, status=status.HTTP_403_FORBIDDEN)
@@ -103,13 +110,17 @@ class MeasurementView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def get(self, request, id):
-        hydroponic_system = HydroponicSystem.objects.get(id=id)
-            
+        try:
+            hydroponic_system = HydroponicSystem.objects.get(id=id)
+        except HydroponicSystem.DoesNotExist:
+            return Response({"error": "Hydroponic system not found."}, status=status.HTTP_404_NOT_FOUND)
+        
         if hydroponic_system.owner != request.user:
             return Response({"error": "You are not an owner."}, status=status.HTTP_403_FORBIDDEN)
+
+        measurements = Measurement.objects.filter(hydroponic_system=id)
+        paginator = MeasurementPagination()
+        paginated_measurements = paginator.paginate_queryset(measurements, request)
+        serializer = MeasurementSerializer(paginated_measurements, many=True)
         
-        response = Measurement.objects.filter(hydroponic_system=id)
-        
-        serializer = MeasurementSerializer(response, many=True)
-        
-        return Response({"message": "Successfully retrieved", "data": serializer.data}, status=status.HTTP_200_OK)
+        return paginator.get_paginated_response(serializer.data)
