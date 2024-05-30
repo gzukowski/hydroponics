@@ -1,12 +1,12 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import UserSerializer, HydroponicSystemSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth import authenticate
-from .models import HydroponicSystem
+from .models import HydroponicSystem, Measurement
+from .serializers import UserSerializer, HydroponicSystemSerializer, MeasurementSerializer
 
 class RegisterView(APIView):
     
@@ -64,3 +64,52 @@ class HydroView(APIView):
             return Response({"message": "Hydroponic system deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
         except HydroponicSystem.DoesNotExist:
             return Response({"error": "Hydroponic system not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    def put(self, request, id):
+        new_name = request.data.get('name')
+        try:
+            hydroponic_system = HydroponicSystem.objects.get(id=id)
+            
+            if hydroponic_system.owner != request.user:
+                return Response({"error": "You are not an owner."}, status=status.HTTP_403_FORBIDDEN)
+
+            data = {'name': request.data.get('name')}
+            serializer = HydroponicSystemSerializer(hydroponic_system, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': serializer.data}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except HydroponicSystem.DoesNotExist:
+            return Response({"error": "Hydroponic system not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+class MeasurementView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, id):
+        hydroponic_system = HydroponicSystem.objects.get(id=id)
+        
+        if hydroponic_system.owner != request.user:
+                return Response({"error": "You are not an owner."}, status=status.HTTP_403_FORBIDDEN)
+        
+        data = request.data.copy()
+        data['hydroponic_system'] = request.user.id
+        serializer = MeasurementSerializer(data=data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'measurement': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request, id):
+        hydroponic_system = HydroponicSystem.objects.get(id=id)
+            
+        if hydroponic_system.owner != request.user:
+            return Response({"error": "You are not an owner."}, status=status.HTTP_403_FORBIDDEN)
+        
+        response = Measurement.objects.filter(hydroponic_system=id)
+        
+        serializer = MeasurementSerializer(response, many=True)
+        
+        return Response({"message": "Successfully retrieved", "data": serializer.data}, status=status.HTTP_200_OK)

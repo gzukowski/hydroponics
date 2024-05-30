@@ -17,3 +17,8 @@ class HydroponicSystemSerializer(serializers.ModelSerializer):
     class Meta:
         model = HydroponicSystem
         fields = ['id', 'name', 'created_at', 'updated_at', 'owner']
+        
+class MeasurementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Measurement
+        fields = ['id', 'timestamp', 'ph', 'temperature', 'tds', 'hydroponic_system']
