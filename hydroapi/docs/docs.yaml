@@ -76,3 +76,98 @@ paths:
             application/json:
               schema:
                 type: object
+   /api/hydro/:
+    post:
+      summary: Create a new hydroponic system
+      tags:
+        - Hydroponic System
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      security:
+        - TokenAuthentication: []
+      responses:
+        '201':
+          description: Hydroponic system created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+
+    get:
+      summary: Retrieve all hydroponic systems for certain user
+      tags:
+        - Hydroponic System
+      security:
+        - TokenAuthentication: []
+      responses:
+        '200':
+          description: Successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HydroponicSystem'
+        '403':
+          description: Forbidden, user is not authenticated
+        '404':
+          description: No hydroponic systems found
+  /api/hydro/{id}/:
+    delete:
+      summary: Delete a hydroponic system
+      tags:
+        - Hydroponic System
+      parameters:
+        - name: id
+          in: path
+          description: ID of the hydroponic system to delete
+          required: true
+          schema:
+            type: integer
+      security:
+        - TokenAuthentication: []
+      responses:
+        '204':
+          description: Hydroponic system deleted successfully
+        '403':
+          description: Forbidden, user is not the owner of the hydroponic system
+        '404':
+          description: Hydroponic system not found
+components:
+  schemas:
+    HydroponicSystem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        owner:
+          type: integer
