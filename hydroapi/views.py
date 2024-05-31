@@ -1,13 +1,16 @@
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from django.contrib.auth import authenticate
+from rest_framework import status, filters
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
-from django.contrib.auth import authenticate
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import HydroponicSystem, Measurement
 from .serializers import UserSerializer, HydroponicSystemSerializer, MeasurementSerializer
-from rest_framework.pagination import PageNumberPagination
+from .filters import MeasurementFilter
+
 
 class RegisterView(APIView):
     
@@ -20,7 +23,6 @@ class RegisterView(APIView):
             return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
 class LoginView(APIView):
     
     permission_classes = [AllowAny] 
@@ -37,6 +39,9 @@ class LoginView(APIView):
 class HydroView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = MeasurementFilter
+    ordering_fields = ['timestamp', 'ph', 'temperature', 'tds']
     
     def post(self, request):
         data = request.data.copy()
@@ -119,6 +124,14 @@ class MeasurementView(APIView):
             return Response({"error": "You are not an owner."}, status=status.HTTP_403_FORBIDDEN)
 
         measurements = Measurement.objects.filter(hydroponic_system=id)
+        
+        filterset = MeasurementFilter(request.GET, queryset=measurements)
+        measurements = filterset.qs
+
+        ordering = request.GET.get('ordering', None)
+        if ordering:
+            measurements = measurements.order_by(ordering)
+        
         paginator = MeasurementPagination()
         paginated_measurements = paginator.paginate_queryset(measurements, request)
         serializer = MeasurementSerializer(paginated_measurements, many=True)
