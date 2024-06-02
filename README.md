@@ -61,7 +61,11 @@ Replace fields with your credentials.
    ```bash
    docker-compose up
    ```
-
+3. **Create superuser to access /admin panel:**
+    Access the backend container console and run
+   ```bash
+   python manage.py createsuperuser
+   ```
 Your Django project should now be running on `http://localhost:8000`.
 
 ## Usage
