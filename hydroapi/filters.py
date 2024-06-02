@@ -2,6 +2,9 @@ import django_filters
 from .models import Measurement
 
 class MeasurementFilter(django_filters.FilterSet):
+    """
+    FilterSet class for filtering Measurement instances based on various criteria.
+    """
     timestamp_min = django_filters.DateTimeFilter(field_name="timestamp", lookup_expr='gte')
     timestamp_max = django_filters.DateTimeFilter(field_name="timestamp", lookup_expr='lte')
     ph_min = django_filters.NumberFilter(field_name="ph", lookup_expr='gte')
@@ -12,5 +15,13 @@ class MeasurementFilter(django_filters.FilterSet):
     tds_max = django_filters.NumberFilter(field_name="tds", lookup_expr='lte')
 
     class Meta:
+        """
+        Meta class to specify the model and the fields for filtering.
+        """
         model = Measurement
-        fields = ['timestamp_min', 'timestamp_max', 'ph_min', 'ph_max', 'temperature_min', 'temperature_max', 'tds_min', 'tds_max']
+        fields = [
+            'timestamp_min', 'timestamp_max', 
+            'ph_min', 'ph_max', 
+            'temperature_min', 'temperature_max', 
+            'tds_min', 'tds_max'
+        ]
