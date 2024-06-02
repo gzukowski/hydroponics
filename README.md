@@ -38,14 +38,12 @@ Copy the generated secret key for later use.
 Create a file named `.env` in the root directory of your project and add the following contents:
 
 ```env
-DJANGO_SECRET_KEY=your_generated_secret_key
-DJANGO_DEBUG=True
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_NAME=db_name
-DATABASE_USER=db_user
-DATABASE_PASSWORD=db_password
-DATABASE_HOST=db_host
-DATABASE_PORT=db_port
+SECRET=
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+DB_HOST=
+DB_PORT=
 ```
 
 Replace fields with your credentials.
