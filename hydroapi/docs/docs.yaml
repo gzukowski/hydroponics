@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: HydroAPI
   version: 1.0.0
-  description: API for managig the hydroponics' systems
+  description: API for managing the hydroponic systems
 
 servers:
   - url: http://localhost:8000
@@ -35,7 +35,9 @@ paths:
             application/json:
               schema:
                 type: object
-
+                properties:
+                  message:
+                    type: string
         '400':
           description: Bad Request
           content:
@@ -69,14 +71,17 @@ paths:
             application/json:
               schema:
                 type: object
-
+                properties:
+                  token:
+                    type: string
         '400':
           description: Invalid credentials
           content:
             application/json:
               schema:
                 type: object
-   /api/hydro/:
+
+  /api/hydro/:
     post:
       summary: Create a new hydroponic system
       tags:
@@ -101,7 +106,9 @@ paths:
             application/json:
               schema:
                 type: object
-
+                properties:
+                  hydroponic_system:
+                    $ref: '#/components/schemas/HydroponicSystem'
         '400':
           description: Bad Request
           content:
@@ -110,7 +117,7 @@ paths:
                 type: object
 
     get:
-      summary: Retrieve all hydroponic systems for certain user
+      summary: Retrieve all hydroponic systems for the authenticated user
       tags:
         - Hydroponic System
       security:
@@ -131,8 +138,7 @@ paths:
                       $ref: '#/components/schemas/HydroponicSystem'
         '403':
           description: Forbidden, user is not authenticated
-        '404':
-          description: No hydroponic systems found
+
   /api/hydro/{id}/:
     delete:
       summary: Delete a hydroponic system
@@ -154,6 +160,190 @@ paths:
           description: Forbidden, user is not the owner of the hydroponic system
         '404':
           description: Hydroponic system not found
+
+    put:
+      summary: Update a hydroponic system's name
+      tags:
+        - Hydroponic System
+      parameters:
+        - name: id
+          in: path
+          description: ID of the hydroponic system to update
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required:
+                - name
+      security:
+        - TokenAuthentication: []
+      responses:
+        '200':
+          description: Hydroponic system updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    $ref: '#/components/schemas/HydroponicSystem'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden, user is not the owner of the hydroponic system
+        '404':
+          description: Hydroponic system not found
+
+  /api/hydro/{id}/measurements/:
+    post:
+      summary: Create a new measurement for a hydroponic system
+      tags:
+        - Measurement
+      parameters:
+        - name: id
+          in: path
+          description: ID of the hydroponic system to add measurement to
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ph:
+                  type: number
+                temperature:
+                  type: number
+                tds:
+                  type: number
+              required:
+                - ph
+                - temperature
+                - tds
+      security:
+        - TokenAuthentication: []
+      responses:
+        '201':
+          description: Measurement created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  measurement:
+                    $ref: '#/components/schemas/Measurement'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden, user is not the owner of the hydroponic system
+        '404':
+          description: Hydroponic system not found
+
+    get:
+      summary: Retrieve measurements for a specific hydroponic system
+      tags:
+        - Measurement
+      parameters:
+        - name: id
+          in: path
+          description: ID of the hydroponic system to get measurements from
+          required: true
+          schema:
+            type: integer
+        - name: timestamp_min
+          in: query
+          description: Filter measurements from this timestamp (inclusive)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: timestamp_max
+          in: query
+          description: Filter measurements up to this timestamp (inclusive)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: ph_min
+          in: query
+          description: Filter measurements with pH greater than or equal to this value
+          required: false
+          schema:
+            type: number
+        - name: ph_max
+          in: query
+          description: Filter measurements with pH less than or equal to this value
+          required: false
+          schema:
+            type: number
+        - name: temperature_min
+          in: query
+          description: Filter measurements with temperature greater than or equal to this value
+          required: false
+          schema:
+            type: number
+        - name: temperature_max
+          in: query
+          description: Filter measurements with temperature less than or equal to this value
+          required: false
+          schema:
+            type: number
+        - name: tds_min
+          in: query
+          description: Filter measurements with TDS greater than or equal to this value
+          required: false
+          schema:
+            type: number
+        - name: tds_max
+          in: query
+          description: Filter measurements with TDS less than or equal to this value
+          required: false
+          schema:
+            type: number
+        - name: ordering
+          in: query
+          description: Order measurements by a specific field (timestamp, ph, temperature, tds)
+          required: false
+          schema:
+            type: string
+      security:
+        - TokenAuthentication: []
+      responses:
+        '200':
+          description: Successfully retrieved measurements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Measurement'
+        '403':
+          description: Forbidden, user is not the owner of the hydroponic system
+        '404':
+          description: Hydroponic system not found
+
 components:
   schemas:
     HydroponicSystem:
@@ -171,3 +361,20 @@ components:
           format: date-time
         owner:
           type: integer
+
+    Measurement:
+      type: object
+      properties:
+        id:
+          type: integer
+        hydroponic_system:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        ph:
+          type: number
+        temperature:
+          type: number
+        tds:
+          type: number
