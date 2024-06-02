@@ -21,4 +21,4 @@ class Measurement(models.Model):
         ordering = ['-timestamp']
 
     def __str__(self):
-        return f"placeholder"
+        return f"Measurement at {self.timestamp}: pH={self.ph}, Temp={self.temperature}°C, TDS={self.tds} ppm"
