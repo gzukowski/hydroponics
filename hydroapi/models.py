@@ -14,13 +14,16 @@ class HydroponicSystem(models.Model):
         """
         String representation of the HydroponicSystem model, returns the name of the system.
         """
-        return self.name
-    
+        return f"{self.name}"
 class Measurement(models.Model):
     """
     Model representing a measurement taken from a hydroponic system.
     """
-    hydroponic_system = models.ForeignKey(HydroponicSystem, on_delete=models.CASCADE, related_name='measurements')
+    hydroponic_system = models.ForeignKey(
+        HydroponicSystem,
+        on_delete=models.CASCADE,
+        related_name='measurements'
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
     ph = models.DecimalField(max_digits=6, decimal_places=2)
     temperature = models.DecimalField(max_digits=6, decimal_places=2)
@@ -33,4 +36,8 @@ class Measurement(models.Model):
         """
         String representation of the Measurement model, returns details of the measurement.
         """
-        return f"Measurement at {self.timestamp}: pH={self.ph}, Temp={self.temperature}°C, TDS={self.tds} ppm"
+        return (
+            f"Measurement at {self.timestamp}: "
+            f"pH={self.ph}, Temp={self.temperature}°C, "
+            f"TDS={self.tds} ppm"
+        )
