@@ -345,6 +345,11 @@ paths:
           description: Hydroponic system not found
 
 components:
+  securitySchemes:
+    TokenAuthentication:
+      type: http
+      scheme: bearer
+      bearerFormat: "Token"
   schemas:
     HydroponicSystem:
       type: object
