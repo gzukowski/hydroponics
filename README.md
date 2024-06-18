@@ -1,6 +1,6 @@
 # HydroAPI
 
-HydroAPI is a Django-based API for managing hydroponic systems and their measurements. This project is developed as part of a recruitment task.
+HydroAPI is a simple Django-based API for managing hydroponic systems and their measurements. 
 
 
 ## Table of Contents
